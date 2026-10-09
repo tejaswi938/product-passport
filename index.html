@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07090b">
+<title>CircuLife · Digital Product Passport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script>
+/* ===== PASTE YOUR FIREBASE VALUES HERE (see setup steps) ===== */
+window.FIREBASE_CONFIG={apiKey:"PASTE_API_KEY",authDomain:"PASTE_AUTH_DOMAIN",projectId:"PASTE_PROJECT_ID",appId:"PASTE_APP_ID"};
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,collection,doc,setDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const cfg=window.FIREBASE_CONFIG;
+if(cfg&&cfg.apiKey&&!cfg.apiKey.startsWith('PASTE')){
+  try{
+    const db=getFirestore(initializeApp(cfg));
+    window.cloud={push:p=>setDoc(doc(db,'passports',p.id),JSON.parse(JSON.stringify(p))).catch(()=>{})};
+    onSnapshot(collection(db,'passports'),snap=>{const l=[];snap.forEach(d=>l.push(d.data()));window.__cloudUpdate&&window.__cloudUpdate(l)},()=>{});
+  }catch(e){console.warn('Cloud sync off',e)}
+}
+</script>
+<style>
+:root{--bg:#07090b;--gold:#d4af37;--gold2:#f6e27a;--em:#34d399;--txt:#f3efe6;--mute:#9a9484;--glass:rgba(255,255,255,.045);--edge:rgba(212,175,55,.2);--warn:#fbbf24;--bad:#f87171}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 Inter,system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+/* animated backdrop */
+.bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(1200px 700px at 15% -10%,#1a1608 0,transparent 60%),radial-gradient(900px 600px at 100% 10%,#06241a 0,transparent 55%),var(--bg)}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.35;z-index:-1;animation:float 18s ease-in-out infinite}
+.o1{width:320px;height:320px;background:#d4af37;top:8%;left:-80px}
+.o2{width:300px;height:300px;background:#10b981;top:55%;right:-90px;animation-delay:-6s}
+.o3{width:220px;height:220px;background:#7c5cff;bottom:-60px;left:30%;animation-delay:-11s;opacity:.2}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-50px) scale(1.15)}}
+.grain{position:fixed;inset:0;z-index:-1;opacity:.06;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+main{max-width:720px;margin:0 auto;padding:18px 16px 60px}
+/* type */
+h1,h2,h3{font-family:'Playfair Display',serif;margin:0}
+h1{font-size:30px;line-height:1.15}
+h2{font-size:19px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+h2:before{content:"";width:18px;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.shimmer{background:linear-gradient(100deg,#b8902a 20%,#fff2a8 45%,#d4af37 55%,#b8902a 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 5s linear infinite}
+@keyframes sh{to{background-position:-250% 0}}
+.sub{color:var(--mute);font-size:13px;margin:4px 0 0}
+.eyebrow{letter-spacing:.28em;text-transform:uppercase;font-size:11px;color:var(--gold)}
+/* glass */
+.card{position:relative;background:var(--glass);border:1px solid var(--edge);border-radius:20px;padding:18px;margin-bottom:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);transform-style:preserve-3d;transition:transform .2s ease,border-color .3s}
+.card:hover{border-color:rgba(212,175,55,.45)}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+/* buttons / inputs */
+button{position:relative;overflow:hidden;background:linear-gradient(135deg,#f6e27a,#d4af37 55%,#a67c00);color:#1a1400;border:0;border-radius:12px;padding:12px 18px;font:600 15px Inter;margin-top:12px;cursor:pointer;box-shadow:0 6px 20px rgba(212,175,55,.3);transition:transform .15s}
+button:active{transform:scale(.97)}
+button:after{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:shine 3.5s infinite}
+@keyframes shine{0%,60%{left:-80%}100%{left:130%}}
+button.ghost{background:transparent;color:var(--txt);border:1px solid var(--edge);box-shadow:none}
+button.ghost:after{display:none}
+label{display:block;font-size:12px;color:var(--mute);margin:12px 0 5px;letter-spacing:.04em}
+input,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--edge);background:rgba(0,0,0,.35);color:var(--txt);font:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.15)}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--edge);border-radius:99px;padding:6px 13px;font-size:13px;cursor:pointer;user-select:none;transition:all .2s}
+.chip.on{background:linear-gradient(135deg,#f6e27a,#d4af37);color:#1a1400;border-color:transparent;box-shadow:0 0 14px rgba(212,175,55,.5)}
+/* hero stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 16px}
+.stat{text-align:center;padding:14px 6px;margin:0}
+.stat b{display:block;font:700 28px 'Playfair Display';color:var(--gold2);text-shadow:0 0 18px rgba(212,175,55,.45)}
+.stat small{color:var(--mute);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+/* product tiles */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:420px){.grid{grid-template-columns:1fr}}
+.tile{cursor:pointer;padding:14px;text-align:center;margin:0}
+.tile .nm{font-weight:600;margin-top:6px}
+.tile small{color:var(--mute)}
+/* gauge + charts */
+.gauge{position:relative;width:150px;height:150px;margin:auto}
+.gauge svg{transform:rotate(-90deg)}
+.gauge .trk{stroke:rgba(255,255,255,.07)}
+.gauge .val{transition:stroke-dasharray 1.6s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 6px currentColor)}
+.gauge .num{position:absolute;inset:0;display:grid;place-items:center;font:700 38px 'Playfair Display'}
+.gauge .num small{display:block;font:11px Inter;color:var(--mute);letter-spacing:.15em;text-align:center;margin-top:-6px}
+.mini{width:84px;height:84px}.mini .num{font-size:22px}.mini .num small{display:none}
+.donutwrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
+.donut circle{transition:stroke-dasharray 1.4s cubic-bezier(.2,.8,.2,1)}
+.legend{font-size:13px;display:grid;gap:5px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}
+.bar{height:9px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#a67c00,#f6e27a);transition:width 1.3s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 10px rgba(212,175,55,.6)}
+.bl{display:flex;justify-content:space-between;font-size:13px}
+/* journey */
+.journey{display:flex;justify-content:space-between;position:relative;margin:6px 0 4px}
+.journey:before{content:"";position:absolute;top:14px;left:8%;right:8%;height:2px;background:rgba(255,255,255,.1)}
+.step{position:relative;text-align:center;flex:1;font-size:11px;color:var(--mute)}
+.step i{display:grid;place-items:center;width:28px;height:28px;margin:0 auto 5px;border-radius:50%;background:#14130e;border:1px solid var(--edge);font-style:normal;font-size:13px}
+.step.on{color:var(--gold2)}
+.step.on i{background:linear-gradient(135deg,#f6e27a,#d4af37);color:#1a1400;box-shadow:0 0 16px rgba(212,175,55,.7);border:0}
+/* timeline */
+.tl{border-left:1px solid var(--edge);margin-left:8px;padding-left:20px}
+.ev{position:relative;margin-bottom:16px;opacity:0;transform:translateX(-14px);transition:all .6s ease}
+.ev.in{opacity:1;transform:none}
+.ev:before{content:"";position:absolute;left:-27px;top:6px;width:11px;height:11px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(212,175,55,.15),0 0 14px var(--gold)}
+.ev small{color:var(--mute)}
+.tag{display:inline-block;border:1px solid var(--edge);border-radius:99px;padding:3px 11px;font-size:12px;margin:3px 4px 3px 0;background:rgba(212,175,55,.06)}
+.badge{display:inline-block;background:linear-gradient(135deg,rgba(246,226,122,.18),rgba(212,175,55,.06));border:1px solid rgba(212,175,55,.5);color:var(--gold2);border-radius:12px;padding:5px 11px;font-size:13px;margin:4px 5px 4px 0;animation:pop .6s both}
+@keyframes pop{from{transform:scale(.5);opacity:0}}
+#qr{background:#fff;padding:12px;border-radius:16px;display:inline-block;box-shadow:0 0 0 1px var(--gold),0 0 40px rgba(212,175,55,.35);animation:glow 3s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 1px var(--gold),0 0 70px rgba(212,175,55,.6)}}
+.center{text-align:center}
+.rec{margin-top:14px;padding:16px;border-radius:16px;border:1px solid var(--gold);background:radial-gradient(400px 120px at 0 0,rgba(212,175,55,.18),transparent);animation:pop .5s both}
+.rec h3{color:var(--gold2);font-size:22px;margin-bottom:6px}
+.rec li{margin:4px 0}
+.warn{color:var(--warn);font-size:13px;margin-top:6px}
+.paths{display:flex;gap:8px;margin-bottom:10px}
+.paths div{flex:1;text-align:center;padding:9px 4px;border-radius:12px;border:1px solid var(--edge);font-size:13px;color:var(--mute);transition:all .4s}
+.paths div.on{color:#1a1400;background:linear-gradient(135deg,#f6e27a,#d4af37);box-shadow:0 0 20px rgba(212,175,55,.6);transform:translateY(-3px);border:0;font-weight:600}
+.big{font:700 24px 'Playfair Display';color:var(--gold2)}
+a{color:var(--gold2)}
+video{width:100%;border-radius:14px;margin-top:10px;background:#000;border:1px solid var(--edge)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,40px);background:#14130e;border:1px solid var(--gold);color:var(--gold2);padding:11px 20px;border-radius:99px;opacity:0;transition:all .4s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+canvas.conf{position:fixed;inset:0;pointer-events:none;z-index:60}
+.fine{font-size:11px;color:var(--mute);margin-top:6px}
+.desc{color:var(--mute);font-size:13px;margin:-4px 0 14px;line-height:1.45}
+.desc b{color:var(--gold2);font-weight:600}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.ev{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="grain"></div>
+<canvas class="conf" id="conf"></canvas>
+<div class="toast" id="toast"></div>
+<main id="app"></main>
+<script>
+const KEY='dpp_products_luxe_v1';
+const MATERIALS=['Plastic','Aluminium','Steel','Copper','Glass','Wood','Cotton','Paper','Lithium-ion battery','Circuit board'];
+const EVENT_TYPES=['Purchase','Maintenance','Repair','Ownership transfer','Other'];
+const RECYCLE={'Plastic':40,'Aluminium':90,'Steel':85,'Copper':90,'Glass':80,'Wood':60,'Cotton':50,'Paper':70,'Lithium-ion battery':45,'Circuit board':30};
+const PALETTE=['#d4af37','#34d399','#7c5cff','#f472b6','#38bdf8','#fb923c','#a3e635','#e879f9','#22d3ee','#f87171'];
+const $=s=>document.querySelector(s);
+const app=$('#app');
+
+/* ---------- storage ---------- */
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||null}catch(e){return null}}
+function save(l){try{localStorage.setItem(KEY,JSON.stringify(l))}catch(e){}}
+let products=load();
+if(!products){
+  products=[
+   {id:'demo1',name:'Rechargeable Desk Lamp',category:'Lighting',maker:'BrightHome',purchased:'2023-03-12',
+    materials:['Plastic','Aluminium','Lithium-ion battery','Circuit board'],
+    events:[{date:'2023-03-12',type:'Purchase',note:'Bought new'},{date:'2024-06-02',type:'Maintenance',note:'Cleaned contacts'}]},
+   {id:'demo2',name:'Steel Water Bottle',category:'Drinkware',maker:'HydroCo',purchased:'2022-01-20',
+    materials:['Steel','Plastic'],
+    events:[{date:'2022-01-20',type:'Purchase',note:'Bought new'},{date:'2023-08-14',type:'Repair',note:'Replaced cap seal'},{date:'2025-02-01',type:'Ownership transfer',note:'Gifted to a friend'}]}
+  ];
+  save(products);
+}
+
+/* ---------- helpers ---------- */
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const dec=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return JSON.parse(decodeURIComponent(escape(atob(s))))};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+const passportUrl=p=>location.href.split('#')[0]+'#/p/'+enc(p);
+const ageYears=p=>Math.max(0,(Date.now()-new Date(p.purchased||Date.now()))/31557600000);
+const repairCount=p=>(p.events||[]).filter(e=>e.type==='Repair').length;
+const co2Saved=p=>repairCount(p)*6; // illustrative estimate
+function score(p){
+  const m=p.materials||[];
+  const rec=m.length?m.reduce((s,x)=>s+(RECYCLE[x]||40),0)/m.length:30;
+  const a=ageYears(p);
+  return Math.max(0,Math.min(100,Math.round(.5*rec+Math.min(30,repairCount(p)*10)+(a<3?20:a<6?10:0))));
+}
+const scoreColor=s=>s>=70?'#f6e27a':s>=45?'#fbbf24':'#f87171';
+function badges(p){
+  const b=[],r=repairCount(p);
+  if(r>=1)b.push('🔧 Repair Hero');
+  if(r>=3)b.push('🏆 Master Fixer');
+  if(ageYears(p)>=3)b.push('⏳ Long-Lived');
+  if((p.events||[]).some(e=>e.type==='Ownership transfer'))b.push('🔁 Second Life');
+  if(score(p)>=75)b.push('🌱 Circular Champion');
+  if((p.events||[]).length>=5)b.push('📖 Well Documented');
+  return b;
+}
+
+/* ---------- SVG graphics ---------- */
+function gauge(s,cls=''){
+  const r=52,C=2*Math.PI*r,id='g'+Math.random().toString(36).slice(2,7),col=scoreColor(s);
+  return `<div class="gauge ${cls}"><svg viewBox="0 0 120 120" width="100%" height="100%">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a67c00"/><stop offset="1" stop-color="${col}"/></linearGradient></defs>
+    <circle class="trk" cx="60" cy="60" r="${r}" fill="none" stroke-width="9"/>
+    <circle class="val" cx="60" cy="60" r="${r}" fill="none" stroke="url(#${id})" stroke-width="9" stroke-linecap="round" style="color:${col}" stroke-dasharray="0 ${C}" data-len="${s/100*C}" data-c="${C}"/>
+  </svg><div class="num"><div><span data-count="${s}">0</span><small>SCORE</small></div></div></div>`;
+}
+function donut(data){
+  const tot=data.reduce((s,d)=>s+d.v,0)||1,r=56,C=2*Math.PI*r;let acc=0;
+  const arcs=data.map(d=>{const len=d.v/tot*C,o=-acc;acc+=len;
+    return `<circle cx="70" cy="70" r="${r}" fill="none" stroke="${d.c}" stroke-width="18" stroke-dasharray="0 ${C}" stroke-dashoffset="${o}" data-len="${Math.max(0,len-2)}" data-c="${C}"/>`}).join('');
+  return `<svg class="donut" viewBox="0 0 140 140" width="150" height="150" style="transform:rotate(-90deg)"><circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="18"/>${arcs}</svg>`;
+}
+function legend(data){return `<div class="legend">${data.map(d=>`<div><i style="background:${d.c}"></i>${esc(d.l)} <span style="color:var(--mute)">${d.v}</span></div>`).join('')}</div>`}
+function bar(label,val,right){return `<div class="bl"><span>${esc(label)}</span><span style="color:var(--mute)">${right??val+'%'}</span></div><div class="bar"><i data-w="${val}"></i></div>`}
+
+/* ---------- effects ---------- */
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2400)}
+function confetti(){
+  const c=$('#conf'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+  const ps=Array.from({length:110},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*14,vy:-Math.random()*15-4,s:Math.random()*6+3,c:PALETTE[Math.floor(Math.random()*4)],r:Math.random()*6}));
+  let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.vy+=.45;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore()});
+    if(++f<120)requestAnimationFrame(tick);else x.clearRect(0,0,c.width,c.height)})();
+}
+function countUp(el){
+  const to=+el.dataset.count,suf=el.dataset.suf||'',t0=performance.now();
+  (function f(t){const k=Math.min(1,(t-t0)/1400),e=1-Math.pow(1-k,3);el.textContent=Math.round(to*e)+suf;if(k<1)requestAnimationFrame(f)})(t0);
+}
+function post(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('[data-len]').forEach(c=>c.setAttribute('stroke-dasharray',c.dataset.len+' '+c.dataset.c));
+    document.querySelectorAll('[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+    document.querySelectorAll('[data-count]').forEach(countUp);
+  }));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+  document.querySelectorAll('.reveal,.ev').forEach((e,i)=>{e.style.transitionDelay=(i%6)*70+'ms';io.observe(e)});
+  if(matchMedia('(hover:hover)').matches)document.querySelectorAll('.card').forEach(c=>{
+    c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect(),px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(900px) rotateY(${px*5}deg) rotateX(${-py*5}deg)`});
+    c.addEventListener('pointerleave',()=>c.style.transform='');
+  });
+}
+
+/* ---------- rule engine ---------- */
+function advise(p,cond){
+  const m=p.materials||[],has=x=>m.includes(x),repairs=repairCount(p),years=ageYears(p);
+  const out={path:'',why:[],steps:[],warn:[],missing:[]};
+  if(!m.length)out.missing.push('No materials recorded, so recovery advice is generic. Add materials to the passport for accurate guidance.');
+  if(!p.purchased)out.missing.push('Purchase date missing, so age was not considered.');
+  if(cond==='working'){
+    out.path='Reuse';out.why.push('It still works, so keeping it in use has the lowest environmental cost.');
+    out.steps.push('Clean it and note any wear in the passport.','Resell, donate, or pass it to someone who needs it.','Log an "Ownership transfer" event so the next owner inherits its history.');
+  }else if(cond==='minor'){
+    out.path='Repair';out.why.push('A minor fault is usually cheap to fix and extends life significantly.');
+    out.steps.push('Check cable, switch, charging port and connectors first.');
+    if(has('Lithium-ion battery'))out.steps.push('If it holds charge poorly, replace the battery pack with a compatible one.');
+    out.steps.push('Log the fix as a "Repair" event in the passport.');
+  }else if(cond==='major'){
+    if(repairs<2&&years<7){
+      out.path='Repair';out.why.push(`Only ${repairs} repair(s) logged and about ${years.toFixed(1)} years old, so a professional repair is still worthwhile.`);
+      out.steps.push('Get a quote from an authorised service centre or local repair shop.','If the quote is above about 50% of a new unit, switch to Recover.');
+    }else{
+      out.path='Recover';out.why.push(`Repeated repairs (${repairs}) or age (about ${years.toFixed(1)} years) make further repair unlikely to pay off.`);recoverSteps(out,m);
+    }
+  }else{
+    out.path='Recover';out.why.push('It no longer works and is not worth repairing, so recover its materials.');recoverSteps(out,m);
+  }
+  return out;
+}
+function recoverSteps(out,m){
+  const has=x=>m.includes(x);
+  if(has('Lithium-ion battery')){out.steps.push('Remove the battery if possible and take it to a battery collection point.');out.warn.push('Never put lithium-ion batteries in household waste: fire risk.')}
+  if(has('Circuit board'))out.steps.push('Hand the electronics to an authorised e-waste collector.');
+  if(has('Aluminium')||has('Steel')||has('Copper'))out.steps.push('Metal parts (aluminium, steel, copper) can go to a scrap metal recycler.');
+  if(has('Plastic'))out.steps.push('Check the plastic resin code and separate the casing for plastic recycling.');
+  if(has('Glass'))out.steps.push('Separate glass and send it to glass recycling.');
+  if(has('Wood')||has('Paper')||has('Cotton'))out.steps.push('Natural materials (wood, paper, cotton) can be composted or sent to fibre recycling.');
+  if(!(out.steps.length))out.steps.push('Take the item to a general e-waste or recycling drop-off point.');
+  out.steps.push('Log a final "Other" event: recovered / recycled.');
+}
+
+/* ---------- scanner + label ---------- */
+function goRaw(raw){const i=(raw||'').indexOf('#/p/');if(i>=0){location.hash=raw.slice(i);return true}return false}
+function scanFile(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const img=new Image();img.onload=()=>{
+    const c=document.createElement('canvas');const sc=Math.min(1,1000/Math.max(img.width,img.height));
+    c.width=img.width*sc;c.height=img.height*sc;const x=c.getContext('2d');x.drawImage(img,0,0,c.width,c.height);
+    const d=x.getImageData(0,0,c.width,c.height);const r=window.jsQR&&jsQR(d.data,d.width,d.height);
+    if(r&&goRaw(r.data))return;toast(r?'That QR is not a product passport':'No QR found. Try a closer, brighter photo.');
+  };img.src=URL.createObjectURL(f);
+}
+function scanFallback(msg){
+  $('#scanbox').innerHTML=`<p class="warn">${msg}</p><label>Or take a photo of the QR code</label><input type="file" id="qrfile" accept="image/*" capture="environment">`;
+  $('#qrfile').onchange=scanFile;
+}
+async function openScanner(){
+  const box=$('#scanbox');
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    scanFallback('Live camera needs a secure https link opened in Chrome or Safari (not inside WhatsApp/Instagram, and not a saved file).');return}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})}
+  catch(e){scanFallback('Camera blocked. Tap the lock icon in the address bar, allow Camera, and reload.');return}
+  box.innerHTML='<video id="v" playsinline muted autoplay></video><button class="ghost" id="stop">Stop</button>';
+  const v=$('#v');v.srcObject=stream;
+  try{await v.play()}catch(e){}
+  let on=true;
+  const stop=()=>{on=false;stream.getTracks().forEach(t=>t.stop());box.innerHTML=''};
+  $('#stop').onclick=stop;
+  const det=('BarcodeDetector' in window)?new BarcodeDetector({formats:['qr_code']}):null;
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+  (async function loop(){
+    while(on){
+      try{
+        let raw=null;
+        if(det){const r=await det.detect(v);if(r.length)raw=r[0].rawValue}
+        else if(window.jsQR&&v.videoWidth){cv.width=v.videoWidth;cv.height=v.videoHeight;cx.drawImage(v,0,0);
+          const d=cx.getImageData(0,0,cv.width,cv.height);const r=jsQR(d.data,d.width,d.height);if(r)raw=r.data}
+        if(raw){stop();if(!goRaw(raw))toast('That QR is not a product passport');return}
+      }catch(e){}
+      await new Promise(r=>setTimeout(r,250));
+    }
+  })();
+}
+async function openScannerOld(){
+  const box=$('#scanbox');
+  if(!('BarcodeDetector' in window)){box.innerHTML='<p class="warn">Live scanning is not supported in this browser. Use your phone camera app to scan the QR instead.</p>';return}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    box.innerHTML='<video id="v" playsinline></video><button class="ghost" id="stop">Stop</button>';
+    const v=$('#v');v.srcObject=stream;await v.play();
+    const det=new BarcodeDetector({formats:['qr_code']});let on=true;
+    const stop=()=>{on=false;stream.getTracks().forEach(t=>t.stop());box.innerHTML=''};
+    $('#stop').onclick=stop;
+    (async function loop(){while(on){
+      try{const r=await det.detect(v);if(r.length){const raw=r[0].rawValue;stop();const i=raw.indexOf('#/p/');
+        if(i>=0){location.hash=raw.slice(i);return}box.innerHTML='<p class="warn">That QR is not a product passport.</p>';return}}catch(e){}
+      await new Promise(r=>setTimeout(r,300));}})();
+  }catch(e){box.innerHTML='<p class="warn">Camera access denied or unavailable.</p>'}
+}
+function downloadQR(p){
+  const c=document.querySelector('#qr canvas');if(!c){toast('QR not ready');return}
+  const W=400,H=500,o=document.createElement('canvas');o.width=W;o.height=H;const x=o.getContext('2d');
+  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0b0d0f');g.addColorStop(1,'#1a1608');x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.strokeStyle='#d4af37';x.lineWidth=3;x.strokeRect(10,10,W-20,H-20);
+  x.fillStyle='#fff';x.fillRect(90,50,220,220);x.drawImage(c,100,60,200,200);
+  x.textAlign='center';x.fillStyle='#f6e27a';x.font='bold 24px serif';x.fillText(p.name.slice(0,26),W/2,315);
+  x.fillStyle='#d4af37';x.font='13px sans-serif';x.fillText('DIGITAL PRODUCT PASSPORT',W/2,342);
+  x.fillStyle='#f3efe6';x.font='bold 40px serif';x.fillText(score(p)+' / 100',W/2,400);
+  x.fillStyle='#9a9484';x.font='12px sans-serif';x.fillText('CIRCULARITY SCORE',W/2,425);x.fillText('Scan for materials, history & end-of-life options',W/2,462);
+  const a=document.createElement('a');a.download=p.name.replace(/\W+/g,'_')+'_label.png';a.href=o.toDataURL('image/png');a.click();
+}
+
+/* ---------- views ---------- */
+function dashboard(){
+  const avg=products.length?Math.round(products.reduce((s,p)=>s+score(p),0)/products.length):0;
+  const mc={};products.forEach(p=>(p.materials||[]).forEach(m=>mc[m]=(mc[m]||0)+1));
+  const mdata=Object.entries(mc).sort((a,b)=>b[1]-a[1]).map(([l,v],i)=>({l,v,c:PALETTE[i%PALETTE.length]}));
+  const ec={};EVENT_TYPES.forEach(t=>ec[t]=0);products.forEach(p=>p.events.forEach(e=>ec[e.type]=(ec[e.type]||0)+1));
+  const emax=Math.max(1,...Object.values(ec));
+  app.innerHTML=`
+  <div class="reveal"><div class="eyebrow">Circular Economy Registry${window.cloud?' · ☁ Live sync on':''}</div>
+  <h1 class="shimmer">CircuLife Product Passports</h1>
+  <p class="sub">Every product has a story. Register it, scan it, extend its life.</p></div>
+  <div class="stats">
+    <div class="card stat reveal"><b data-count="${products.length}">0</b><small>Products</small></div>
+    <div class="card stat reveal"><b data-count="${avg}">0</b><small>Avg score</small></div>
+    <div class="card stat reveal"><b data-count="${products.reduce((s,p)=>s+co2Saved(p),0)}" data-suf="kg">0</b><small>CO₂e saved*</small></div>
+  </div>
+  <p class="desc reveal"><b>Products</b> registered · <b>Avg score</b> = average circularity (0–100, higher is more sustainable) · <b>CO₂e saved</b> = estimated emissions avoided by repairs.</p>
+  <div class="card reveal"><p class="desc" style="margin:0 0 4px">Point your camera at a product's QR code to open its passport instantly.</p><button id="scan" style="margin-top:0;width:100%">📷 Scan a product QR</button><div id="scanbox"></div></div>
+  <div class="card reveal"><h2>Portfolio materials</h2><p class="desc">What all your products are made of. Bigger slices mean more products use that material.</p>
+    ${mdata.length?`<div class="donutwrap">${donut(mdata)}${legend(mdata)}</div>`:'<p class="sub">No materials yet.</p>'}</div>
+  <div class="card reveal"><h2>Lifecycle activity</h2><p class="desc">How many purchases, repairs, maintenance jobs and ownership transfers have been logged across all products.</p>${EVENT_TYPES.map(t=>bar(t,Math.round(ec[t]/emax*100),ec[t])).join('')}</div>
+  <h2 class="reveal" style="margin:22px 0 12px">Your collection</h2>
+  <p class="desc reveal">Tap any product to open its digital passport. The ring shows its circularity score.</p>
+  <div class="grid">${products.map(p=>`<div class="card tile reveal" data-id="${p.id}">${gauge(score(p),'mini')}<div class="nm">${esc(p.name)}</div><small>${esc(p.category)} · ${p.events.length} events</small></div>`).join('')}</div>
+  <div class="card reveal" style="margin-top:16px"><h2>Register a product</h2><p class="desc">Add a new product, pick its materials and issue a passport with its own unique QR code.</p>
+    <label>Name</label><input id="n" placeholder="e.g. Rechargeable Desk Lamp">
+    <div class="row"><div><label>Category</label><input id="c" placeholder="Lighting"></div><div><label>Maker</label><input id="m" placeholder="Brand"></div></div>
+    <label>Purchase / manufacture date</label><input id="d" type="date" value="${today()}">
+    <label>Materials</label><div class="chips" id="mats">${MATERIALS.map(x=>`<span class="chip" data-m="${x}">${x}</span>`).join('')}</div>
+    <button id="add">Issue passport</button></div>
+  <p class="fine">*Illustrative estimate: about 6 kg CO₂e avoided per logged repair.</p>`;
+  $('#scan').onclick=openScanner;
+  app.querySelectorAll('.tile').forEach(e=>e.onclick=()=>location.hash='#/p/'+enc(products.find(p=>p.id===e.dataset.id)));
+  app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+  $('#add').onclick=()=>{
+    const name=$('#n').value.trim();if(!name){toast('Enter a product name');return}
+    const p={id:'p'+Date.now().toString(36),name,category:$('#c').value.trim()||'General',maker:$('#m').value.trim(),purchased:$('#d').value,
+      materials:[...document.querySelectorAll('#mats .on')].map(c=>c.dataset.m),events:[{date:$('#d').value||today(),type:'Purchase',note:'Passport issued'}]};
+    products.push(p);save(products);cloudPush(p);confetti();location.hash='#/p/'+enc(p);
+  };
+  post();
+}
+
+function passport(shared){
+  let p=shared;const local=products.find(x=>x.id===p.id);
+  if(local&&local.events.length>=p.events.length)p=local;
+  const evs=[...p.events].sort((a,b)=>a.date.localeCompare(b.date));
+  const has=t=>p.events.some(e=>e.type===t);
+  const lastNote=evs.map(e=>e.note.toLowerCase()).join(' ');
+  const stages=[['🏭','Made',true],['✨','In use',has('Purchase')],['🔧','Cared for',has('Maintenance')||has('Repair')],['🔁','Passed on',has('Ownership transfer')],['♻️','Recovered',/recover|recycl/.test(lastNote)]];
+  const mats=p.materials||[],mdata=mats.map((l,i)=>({l,v:1,c:PALETTE[i%PALETTE.length]}));
+  const s=score(p);
+  app.innerHTML=`
+  <p class="reveal"><a href="#/">‹ All products</a></p>
+  <div class="card reveal center">
+    <div class="eyebrow">Digital Product Passport</div>
+    <h1 class="shimmer" style="margin:6px 0 2px">${esc(p.name)}</h1>
+    <p class="sub">${esc(p.category)}${p.maker?' · '+esc(p.maker):''} · since ${esc(p.purchased||'unknown')}</p>
+    <div style="margin:18px 0 6px">${gauge(s)}</div>
+    <p class="desc" style="margin:0 0 8px">Circularity score out of 100: how easy this product is to repair, reuse and recycle. Badges are earned from its history.</p>
+    <div>${badges(p).map((b,i)=>`<span class="badge" style="animation-delay:${i*120}ms">${b}</span>`).join('')||'<span class="sub">Log repairs and transfers to earn badges.</span>'}</div>
+    <p class="fine">CO₂e saved by repairs*: <b style="color:var(--gold2)">${co2Saved(p)} kg</b></p>
+  </div>
+  <div class="card reveal"><h2>Life journey</h2><p class="desc">Where this product is in its life. Gold stages are already reached.</p><div class="journey">${stages.map(([i,l,on])=>`<div class="step ${on?'on':''}"><i>${i}</i>${l}</div>`).join('')}</div></div>
+  <div class="card reveal"><h2>Material composition</h2><p class="desc">What the product is made of, and how recyclable each material is. Longer bars are easier to recycle.</p>
+    ${mats.length?`<div class="donutwrap">${donut(mdata)}${legend(mdata.map(d=>({...d,v:(RECYCLE[d.l]||40)+'%'})))}</div>
+    <div style="margin-top:14px">${mats.map(m=>bar(m+' recyclability',RECYCLE[m]||40)).join('')}</div>`:'<p class="warn">Materials not recorded</p>'}</div>
+  <div class="card reveal center"><h2 style="justify-content:center">Authenticity QR</h2><p class="desc" style="margin-top:-4px">This product's unique code. Stick the label on the product so anyone can scan and see its full record.</p><div id="qr"></div>
+    <p class="sub" style="margin:10px 0 0">Scan to open this passport. The record travels inside the code.</p>
+    <div class="row"><button class="ghost" id="copy">Copy link</button><button id="dl">⬇ Download label</button></div></div>
+  <div class="card reveal"><h2>Lifecycle history</h2><p class="desc">A timeline of everything that has happened to this product. Add a new event below to update the record and the QR.</p><div class="tl">
+    ${evs.map(e=>`<div class="ev"><b>${esc(e.type)}</b> <small>· ${esc(e.date)}</small><br>${esc(e.note)}</div>`).join('')}</div>
+    <label>Add event</label>
+    <div class="row"><select id="et">${EVENT_TYPES.map(t=>`<option>${t}</option>`).join('')}</select><input id="ed" type="date" value="${today()}"></div>
+    <input id="en" placeholder="Note, e.g. Replaced battery" style="margin-top:10px">
+    <button id="ae">Add to history</button></div>
+  <div class="card reveal"><h2>Repair vs replace</h2><p class="desc">Enter a repair quote and the price of a new one. If repair costs under half, we suggest fixing it.</p>
+    <div class="row"><div><label>Repair quote (₹)</label><input id="rq" type="number" inputmode="numeric" placeholder="500"></div>
+    <div><label>New price (₹)</label><input id="np" type="number" inputmode="numeric" placeholder="1500"></div></div>
+    <button id="calc">Compare</button><div id="calcres" style="margin-top:12px"></div></div>
+  <div class="card reveal"><h2>End-of-life assistant</h2><p class="desc">Tell us the product's condition. Based on its materials and history, we recommend Repair, Reuse or Recover, with steps.</p>
+    <div class="paths"><div id="p1">🔧 Repair</div><div id="p2">🔁 Reuse</div><div id="p3">♻️ Recover</div></div>
+    <label>Current condition</label>
+    <select id="cond"><option value="working">Works fine</option><option value="minor">Minor fault</option><option value="major">Major fault</option><option value="dead">Not working at all</option></select>
+    <button id="adv">Get recommendation</button><div id="res"></div></div>
+  <p class="fine">*Illustrative estimate.</p>`;
+  try{new QRCode($('#qr'),{text:passportUrl(p),width:190,height:190,correctLevel:QRCode.CorrectLevel.L})}catch(e){$('#qr').textContent='QR library failed to load (check internet).'}
+  $('#dl').onclick=()=>downloadQR(p);
+  $('#copy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(passportUrl(p));toast('Passport link copied')};
+  $('#ae').onclick=()=>{
+    const note=$('#en').value.trim();if(!note){toast('Add a short note');return}
+    const type=$('#et').value;
+    p.events.push({date:$('#ed').value||today(),type,note});
+    const i=products.findIndex(x=>x.id===p.id);if(i>=0)products[i]=p;else products.push(p);
+    save(products);cloudPush(p);if(type==='Repair'||type==='Ownership transfer')confetti();
+    location.hash='#/p/'+enc(p);route();toast('Event added to passport');
+  };
+  $('#calc').onclick=()=>{
+    const r=+$('#rq').value,n=+$('#np').value;
+    if(!r||!n){$('#calcres').innerHTML='<span class="warn">Enter both amounts.</span>';return}
+    const ratio=r/n,good=ratio<.5;
+    $('#calcres').innerHTML=`<div class="big">${good?'Repair it':'Replace / Recover'}</div>${bar('Repair cost vs new',Math.min(100,Math.round(ratio*100)))}
+      <div>${good?'Saves ₹'+(n-r)+' and avoids new manufacturing waste.':'Repair is over half the price of new. Consider the Recover route below.'}</div>`;
+    post();
+  };
+  $('#adv').onclick=()=>{
+    const r=advise(p,$('#cond').value);
+    ['p1','p2','p3'].forEach(id=>$('#'+id).classList.remove('on'));
+    $({Repair:'#p1',Reuse:'#p2',Recover:'#p3'}[r.path]).classList.add('on');
+    $('#res').innerHTML=`<div class="rec"><h3>Recommended: ${r.path}</h3><div>${r.why.map(esc).join(' ')}</div>
+      <ul>${r.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      ${r.warn.map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join('')}${r.missing.map(w=>`<div class="warn">ℹ ${esc(w)}</div>`).join('')}</div>`;
+  };
+  post();
+}
+
+function cloudPush(p){try{window.cloud&&window.cloud.push(p)}catch(e){}}
+window.__cloudUpdate=function(list){
+  if(!list.length){products.forEach(cloudPush);return}
+  const map={};list.forEach(p=>map[p.id]=p);
+  products.forEach(l=>{const c=map[l.id];if(!c||(l.events||[]).length>(c.events||[]).length){map[l.id]=l;cloudPush(l)}});
+  products=Object.values(map);
+  try{localStorage.setItem(KEY,JSON.stringify(products))}catch(e){}
+  const busy=['#n','#en','#rq','#np'].some(s=>{const e=$(s);return e&&e.value});
+  const typing=document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName);
+  if(!busy&&!typing&&!document.querySelector('#scanbox video')&&!document.querySelector('#res .rec'))route(true);
+};
+function route(keep){
+  const h=location.hash;if(!keep)window.scrollTo(0,0);
+  if(h.startsWith('#/p/')){try{passport(dec(h.slice(4)));return}catch(e){}}
+  dashboard();
+}
+addEventListener('hashchange',()=>route());
+route();
+</script>
+</body>
+</html>
