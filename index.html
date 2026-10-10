@@ -12,15 +12,19 @@
 <script>
 /* ===== PASTE YOUR FIREBASE VALUES HERE (see setup steps) ===== */
 window.FIREBASE_CONFIG={apiKey:"AIzaSyBK9CteAy9AGAi7dn8WMgBxIBJ6yWLPeAk",authDomain:"product-passport-7f096.firebaseapp.com",projectId:"product-passport-7f096",appId:"1:702270727928:web:8bac095deccd06f80f7d0d"};
+
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,collection,doc,setDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,doc,setDoc,deleteDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const cfg=window.FIREBASE_CONFIG;
 if(cfg&&cfg.apiKey&&!cfg.apiKey.startsWith('PASTE')){
   try{
-    const db=getFirestore(initializeApp(cfg));
-    window.cloud={push:p=>setDoc(doc(db,'passports',p.id),JSON.parse(JSON.stringify(p))).catch(()=>{})};
+    const app0=initializeApp(cfg);const db=getFirestore(app0);const au=getAuth(app0);
+    window.cloud={push:p=>setDoc(doc(db,'passports',p.id),JSON.parse(JSON.stringify(p))).then(()=>true).catch(()=>false),remove:id=>deleteDoc(doc(db,'passports',id))};
+    window.auth={user:()=>au.currentUser,login:(e,p)=>signInWithEmailAndPassword(au,e,p),signup:(e,p)=>createUserWithEmailAndPassword(au,e,p),logout:()=>signOut(au)};
+    onAuthStateChanged(au,u=>{window.__authChange&&window.__authChange(u)});
     onSnapshot(collection(db,'passports'),snap=>{const l=[];snap.forEach(d=>l.push(d.data()));window.__cloudUpdate&&window.__cloudUpdate(l)},()=>{});
   }catch(e){console.warn('Cloud sync off',e)}
 }
@@ -128,13 +132,41 @@ canvas.conf{position:fixed;inset:0;pointer-events:none;z-index:60}
 .fine{font-size:11px;color:var(--mute);margin-top:6px}
 .desc{color:var(--mute);font-size:13px;margin:-4px 0 14px;line-height:1.45}
 .desc b{color:var(--gold2);font-weight:600}
+.phimg{width:100%;max-height:220px;object-fit:cover;border-radius:16px;border:1px solid var(--gold);margin-top:12px;box-shadow:0 0 24px rgba(212,175,55,.3)}
+.pimg{display:block;width:120px;height:120px;border-radius:50%;object-fit:cover;margin:14px auto 4px;border:2px solid var(--gold);box-shadow:0 0 30px rgba(212,175,55,.45)}
+.thumb{display:block;width:56px;height:56px;border-radius:50%;object-fit:cover;margin:0 auto 6px;border:1px solid var(--gold)}
+.danger{background:linear-gradient(135deg,#fca5a5,#ef4444)!important;color:#fff!important;margin-top:0!important;box-shadow:0 6px 20px rgba(239,68,68,.3)!important}
+.toast.ok{border-color:#34d399;color:#bbf7d0}
+.toast.err{border-color:#f87171;color:#fecaca}
+.toast.star{border-color:var(--gold2);color:var(--gold2)}
+.sheet{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .3s}
+.sheet.show{opacity:1;pointer-events:auto}
+.sheetcard{background:#14130e;border:1px solid var(--gold);border-radius:24px;padding:26px 28px;text-align:center;max-width:300px;box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 50px rgba(212,175,55,.25);transform:scale(.85);transition:transform .35s cubic-bezier(.2,1.4,.4,1)}
+.sheet.show .sheetcard{transform:scale(1)}
+.sheetcard h3{font-size:22px;color:var(--gold2);margin:10px 0 4px}
+.sheetcard p{margin:0;color:var(--mute);font-size:14px}
+.tick{width:64px;height:64px}
+.tick circle,.tick path{stroke-dasharray:160;stroke-dashoffset:160}
+.sheet.show .tick circle{animation:draw .6s ease forwards}
+.sheet.show .tick path{animation:draw .5s .35s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.starq{position:absolute;top:8px;right:10px;background:none;border:0;border-radius:0;box-shadow:none;margin:0;padding:4px 6px;font-size:20px;line-height:1;color:var(--mute);cursor:pointer;z-index:2;overflow:visible}
+.starq:after{display:none}
+.starq.on{color:var(--gold2);text-shadow:0 0 14px rgba(246,226,122,.8);animation:pop .4s both}
+.starbtn.on{border-color:var(--gold);color:var(--gold2);background:rgba(212,175,55,.12)}
+.prio{display:inline-block;background:linear-gradient(135deg,#f6e27a,#d4af37);color:#1a1400;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:99px;margin-bottom:8px;box-shadow:0 0 18px rgba(212,175,55,.5)}
+.tile.imp{border-color:rgba(246,226,122,.6);box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 26px rgba(212,175,55,.22)}
+@media(prefers-reduced-motion:reduce){.tick circle,.tick path{stroke-dashoffset:0!important}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.ev{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 <div class="bg"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="grain"></div>
 <canvas class="conf" id="conf"></canvas>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sheet" id="sheet" role="status" aria-live="polite"><div class="sheetcard"><svg class="tick" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="none" stroke="#d4af37" stroke-width="3"/><path d="M14 27l8 8 16-17" fill="none" stroke="#f6e27a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><h3 id="sheetT"></h3><p id="sheetP"></p></div></div>
 <main id="app"></main>
 <script>
 const KEY='dpp_products_luxe_v1';
@@ -162,7 +194,7 @@ if(!products){
 }
 
 /* ---------- helpers ---------- */
-const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o,(k,v)=>k==='photo'?undefined:v)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const dec=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return JSON.parse(decodeURIComponent(escape(atob(s))))};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const today=()=>new Date().toISOString().slice(0,10);
@@ -207,7 +239,9 @@ function legend(data){return `<div class="legend">${data.map(d=>`<div><i style="
 function bar(label,val,right){return `<div class="bl"><span>${esc(label)}</span><span style="color:var(--mute)">${right??val+'%'}</span></div><div class="bar"><i data-w="${val}"></i></div>`}
 
 /* ---------- effects ---------- */
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2400)}
+function toast(msg,type){const t=$('#toast');t.className='toast show '+(type||'');t.textContent=(type==='ok'?'✓ ':type==='err'?'✕ ':type==='star'?'★ ':'')+msg;try{navigator.vibrate&&navigator.vibrate(type==='err'?[40,40,40]:25)}catch(e){}clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2800)}
+function success(title,text){const s=$('#sheet');$('#sheetT').textContent=title;$('#sheetP').textContent=text||'';s.classList.remove('show');void s.offsetWidth;s.classList.add('show');try{navigator.vibrate&&navigator.vibrate([30,30,60])}catch(e){}clearTimeout(success.t);success.t=setTimeout(()=>s.classList.remove('show'),2300);s.onclick=()=>s.classList.remove('show')}
+function shake(sel){const e=$(sel);if(!e)return;e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake');if(e.focus)e.focus()}
 function confetti(){
   const c=$('#conf'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
   const ps=Array.from({length:110},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*14,vy:-Math.random()*15-4,s:Math.random()*6+3,c:PALETTE[Math.floor(Math.random()*4)],r:Math.random()*6}));
@@ -271,14 +305,14 @@ function recoverSteps(out,m){
 }
 
 /* ---------- scanner + label ---------- */
-function goRaw(raw){const i=(raw||'').indexOf('#/p/');if(i>=0){location.hash=raw.slice(i);return true}return false}
+function goRaw(raw){const i=(raw||'').indexOf('#/p/');if(i>=0){location.hash=raw.slice(i);toast('Passport found','ok');return true}return false}
 function scanFile(ev){
   const f=ev.target.files[0];if(!f)return;
   const img=new Image();img.onload=()=>{
     const c=document.createElement('canvas');const sc=Math.min(1,1000/Math.max(img.width,img.height));
     c.width=img.width*sc;c.height=img.height*sc;const x=c.getContext('2d');x.drawImage(img,0,0,c.width,c.height);
     const d=x.getImageData(0,0,c.width,c.height);const r=window.jsQR&&jsQR(d.data,d.width,d.height);
-    if(r&&goRaw(r.data))return;toast(r?'That QR is not a product passport':'No QR found. Try a closer, brighter photo.');
+    if(r&&goRaw(r.data))return;toast(r?'That QR is not a product passport':'No QR found. Try a closer, brighter photo.','err');
   };img.src=URL.createObjectURL(f);
 }
 function scanFallback(msg){
@@ -307,7 +341,7 @@ async function openScanner(){
         if(det){const r=await det.detect(v);if(r.length)raw=r[0].rawValue}
         else if(window.jsQR&&v.videoWidth){cv.width=v.videoWidth;cv.height=v.videoHeight;cx.drawImage(v,0,0);
           const d=cx.getImageData(0,0,cv.width,cv.height);const r=jsQR(d.data,d.width,d.height);if(r)raw=r.data}
-        if(raw){stop();if(!goRaw(raw))toast('That QR is not a product passport');return}
+        if(raw){stop();if(!goRaw(raw))toast('That QR is not a product passport','err');return}
       }catch(e){}
       await new Promise(r=>setTimeout(r,250));
     }
@@ -330,7 +364,7 @@ async function openScannerOld(){
   }catch(e){box.innerHTML='<p class="warn">Camera access denied or unavailable.</p>'}
 }
 function downloadQR(p){
-  const c=document.querySelector('#qr canvas');if(!c){toast('QR not ready');return}
+  const c=document.querySelector('#qr canvas');if(!c){toast('QR not ready','err');return}
   const W=400,H=500,o=document.createElement('canvas');o.width=W;o.height=H;const x=o.getContext('2d');
   const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0b0d0f');g.addColorStop(1,'#1a1608');x.fillStyle=g;x.fillRect(0,0,W,H);
   x.strokeStyle='#d4af37';x.lineWidth=3;x.strokeRect(10,10,W-20,H-20);
@@ -339,7 +373,7 @@ function downloadQR(p){
   x.fillStyle='#d4af37';x.font='13px sans-serif';x.fillText('DIGITAL PRODUCT PASSPORT',W/2,342);
   x.fillStyle='#f3efe6';x.font='bold 40px serif';x.fillText(score(p)+' / 100',W/2,400);
   x.fillStyle='#9a9484';x.font='12px sans-serif';x.fillText('CIRCULARITY SCORE',W/2,425);x.fillText('Scan for materials, history & end-of-life options',W/2,462);
-  const a=document.createElement('a');a.download=p.name.replace(/\W+/g,'_')+'_label.png';a.href=o.toDataURL('image/png');a.click();
+  const a=document.createElement('a');a.download=p.name.replace(/\W+/g,'_')+'_label.png';a.href=o.toDataURL('image/png');a.click();toast('Label saved to your downloads','ok');
 }
 
 /* ---------- views ---------- */
@@ -349,6 +383,8 @@ function dashboard(){
   const mdata=Object.entries(mc).sort((a,b)=>b[1]-a[1]).map(([l,v],i)=>({l,v,c:PALETTE[i%PALETTE.length]}));
   const ec={};EVENT_TYPES.forEach(t=>ec[t]=0);products.forEach(p=>p.events.forEach(e=>ec[e.type]=(ec[e.type]||0)+1));
   const emax=Math.max(1,...Object.values(ec));
+  const impCount=products.filter(p=>p.important).length;
+  const list=[...products].filter(p=>!onlyImp||p.important).sort((a,b)=>(b.important?1:0)-(a.important?1:0));
   app.innerHTML=`
   <div class="reveal"><div class="eyebrow">Circular Economy Registry${window.cloud?' · ☁ Live sync on':''}</div>
   <h1 class="shimmer">CircuLife Product Passports</h1>
@@ -364,23 +400,39 @@ function dashboard(){
     ${mdata.length?`<div class="donutwrap">${donut(mdata)}${legend(mdata)}</div>`:'<p class="sub">No materials yet.</p>'}</div>
   <div class="card reveal"><h2>Lifecycle activity</h2><p class="desc">How many purchases, repairs, maintenance jobs and ownership transfers have been logged across all products.</p>${EVENT_TYPES.map(t=>bar(t,Math.round(ec[t]/emax*100),ec[t])).join('')}</div>
   <h2 class="reveal" style="margin:22px 0 12px">Your collection</h2>
-  <p class="desc reveal">Tap any product to open its digital passport. The ring shows its circularity score.</p>
-  <div class="grid">${products.map(p=>`<div class="card tile reveal" data-id="${p.id}">${gauge(score(p),'mini')}<div class="nm">${esc(p.name)}</div><small>${esc(p.category)} · ${p.events.length} events</small></div>`).join('')}</div>
+  <p class="desc reveal">Tap a product to open its passport. Tap the star to mark it as <b>important</b>; important products are pinned to the top.</p>
+  <div class="chips reveal" style="margin-bottom:12px"><span class="chip ${onlyImp?'':'on'}" id="fAll">All (${products.length})</span><span class="chip ${onlyImp?'on':''}" id="fImp">★ Important (${impCount})</span></div>
+  ${list.length?'':'<p class="sub" style="margin-bottom:12px">No important products yet. Tap ☆ on a product to add one.</p>'}
+  <div class="grid">${list.map(p=>`<div class="card tile reveal ${p.important?'imp':''}" data-id="${p.id}"><button class="starq ${p.important?'on':''}" data-star="${p.id}" aria-label="${p.important?'Remove from important':'Mark as important'}">${p.important?'★':'☆'}</button>${p.photo?`<img class="thumb" src="${p.photo}" alt="">`:''}${gauge(score(p),'mini')}<div class="nm">${esc(p.name)}</div><small>${esc(p.category)} · ${p.events.length} events</small></div>`).join('')}</div>
+  ${accountCard()}
   <div class="card reveal" style="margin-top:16px"><h2>Register a product</h2><p class="desc">Add a new product, pick its materials and issue a passport with its own unique QR code.</p>
     <label>Name</label><input id="n" placeholder="e.g. Rechargeable Desk Lamp">
     <div class="row"><div><label>Category</label><input id="c" placeholder="Lighting"></div><div><label>Maker</label><input id="m" placeholder="Brand"></div></div>
+    <label>Product photo (optional)</label>
+    <div class="row"><button type="button" class="ghost" id="phCam" style="margin-top:0">📸 Take photo</button><button type="button" class="ghost" id="phGal" style="margin-top:0">🖼 Gallery</button></div>
+    <input type="file" id="phA" accept="image/*" capture="environment" hidden><input type="file" id="phB" accept="image/*" hidden>
+    <div id="phPrev">${pendingPhoto?`<img class="phimg" src="${pendingPhoto}" alt="">`:''}</div>
     <label>Purchase / manufacture date</label><input id="d" type="date" value="${today()}">
     <label>Materials</label><div class="chips" id="mats">${MATERIALS.map(x=>`<span class="chip" data-m="${x}">${x}</span>`).join('')}</div>
+    <label>Priority</label><div class="chips"><span class="chip" id="imp">★ Mark as important</span></div>
+    <p class="desc" style="margin:8px 0 0">Important products are starred and pinned to the top of your collection.</p>
     <button id="add">Issue passport</button></div>
   <p class="fine">*Illustrative estimate: about 6 kg CO₂e avoided per logged repair.</p>`;
-  $('#scan').onclick=openScanner;
+  $('#scan').onclick=openScanner;bindAccount();bindPhoto();
   app.querySelectorAll('.tile').forEach(e=>e.onclick=()=>location.hash='#/p/'+enc(products.find(p=>p.id===e.dataset.id)));
   app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+  $('#fAll').onclick=()=>{onlyImp=false;rerenderKeep()};
+  $('#fImp').onclick=()=>{onlyImp=true;rerenderKeep()};
+  app.querySelectorAll('[data-star]').forEach(b=>b.onclick=e=>{e.stopPropagation();const p=products.find(x=>x.id===b.dataset.star);if(p){setImportant(p,!p.important);rerenderKeep()}});
   $('#add').onclick=()=>{
-    const name=$('#n').value.trim();if(!name){toast('Enter a product name');return}
+    const name=$('#n').value.trim();if(!name){toast('Enter a product name','err');shake('#n');return}
     const p={id:'p'+Date.now().toString(36),name,category:$('#c').value.trim()||'General',maker:$('#m').value.trim(),purchased:$('#d').value,
-      materials:[...document.querySelectorAll('#mats .on')].map(c=>c.dataset.m),events:[{date:$('#d').value||today(),type:'Purchase',note:'Passport issued'}]};
-    products.push(p);save(products);cloudPush(p);confetti();location.hash='#/p/'+enc(p);
+      materials:[...document.querySelectorAll('#mats .on')].map(c=>c.dataset.m),events:[{date:$('#d').value||today(),type:'Purchase',note:'Passport issued'}],important:$('#imp').classList.contains('on')};
+    if(pendingPhoto){p.photo=pendingPhoto;pendingPhoto=null}
+    const u=window.auth&&window.auth.user();if(u){p.ownerUid=u.uid;p.ownerEmail=u.email}
+    products.push(p);save(products);syncFeedback(p);confetti();
+    success('Passport issued',(p.important?'★ Important · ':'')+'"'+p.name+'" is registered'+(window.cloud?' and syncing to the cloud.':' on this device.'));
+    location.hash='#/p/'+enc(p);
   };
   post();
 }
@@ -388,6 +440,7 @@ function dashboard(){
 function passport(shared){
   let p=shared;const local=products.find(x=>x.id===p.id);
   if(local&&local.events.length>=p.events.length)p=local;
+  if(local&&!p.photo)p.photo=local.photo;
   const evs=[...p.events].sort((a,b)=>a.date.localeCompare(b.date));
   const has=t=>p.events.some(e=>e.type===t);
   const lastNote=evs.map(e=>e.note.toLowerCase()).join(' ');
@@ -397,6 +450,8 @@ function passport(shared){
   app.innerHTML=`
   <p class="reveal"><a href="#/">‹ All products</a></p>
   <div class="card reveal center">
+    <div id="prioSlot">${p.important?'<span class="prio">★ Priority product</span>':''}</div>
+    ${p.photo?`<img class="pimg" src="${p.photo}" alt="">`:''}
     <div class="eyebrow">Digital Product Passport</div>
     <h1 class="shimmer" style="margin:6px 0 2px">${esc(p.name)}</h1>
     <p class="sub">${esc(p.category)}${p.maker?' · '+esc(p.maker):''} · since ${esc(p.purchased||'unknown')}</p>
@@ -404,6 +459,7 @@ function passport(shared){
     <p class="desc" style="margin:0 0 8px">Circularity score out of 100: how easy this product is to repair, reuse and recycle. Badges are earned from its history.</p>
     <div>${badges(p).map((b,i)=>`<span class="badge" style="animation-delay:${i*120}ms">${b}</span>`).join('')||'<span class="sub">Log repairs and transfers to earn badges.</span>'}</div>
     <p class="fine">CO₂e saved by repairs*: <b style="color:var(--gold2)">${co2Saved(p)} kg</b></p>
+    <button class="ghost starbtn ${p.important?'on':''}" id="star" style="margin-top:10px">${p.important?'★ Important':'☆ Mark as important'}</button>
   </div>
   <div class="card reveal"><h2>Life journey</h2><p class="desc">Where this product is in its life. Gold stages are already reached.</p><div class="journey">${stages.map(([i,l,on])=>`<div class="step ${on?'on':''}"><i>${i}</i>${l}</div>`).join('')}</div></div>
   <div class="card reveal"><h2>Material composition</h2><p class="desc">What the product is made of, and how recyclable each material is. Longer bars are easier to recycle.</p>
@@ -427,17 +483,24 @@ function passport(shared){
     <label>Current condition</label>
     <select id="cond"><option value="working">Works fine</option><option value="minor">Minor fault</option><option value="major">Major fault</option><option value="dead">Not working at all</option></select>
     <button id="adv">Get recommendation</button><div id="res"></div></div>
+  ${manageCard(p)}
   <p class="fine">*Illustrative estimate.</p>`;
   try{new QRCode($('#qr'),{text:passportUrl(p),width:190,height:190,correctLevel:QRCode.CorrectLevel.L})}catch(e){$('#qr').textContent='QR library failed to load (check internet).'}
   $('#dl').onclick=()=>downloadQR(p);
-  $('#copy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(passportUrl(p));toast('Passport link copied')};
+  if($('#rm'))$('#rm').onclick=()=>removeProduct(p);
+  $('#star').onclick=()=>{
+    setImportant(p,!p.important);
+    $('#prioSlot').innerHTML=p.important?'<span class="prio">★ Priority product</span>':'';
+    const b=$('#star');b.classList.toggle('on',!!p.important);b.textContent=p.important?'★ Important':'☆ Mark as important';
+  };
+  $('#copy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(passportUrl(p));toast('Passport link copied','ok')};
   $('#ae').onclick=()=>{
-    const note=$('#en').value.trim();if(!note){toast('Add a short note');return}
+    const note=$('#en').value.trim();if(!note){toast('Add a short note','err');shake('#en');return}
     const type=$('#et').value;
     p.events.push({date:$('#ed').value||today(),type,note});
     const i=products.findIndex(x=>x.id===p.id);if(i>=0)products[i]=p;else products.push(p);
-    save(products);cloudPush(p);if(type==='Repair'||type==='Ownership transfer')confetti();
-    location.hash='#/p/'+enc(p);route();toast('Event added to passport');
+    save(products);syncFeedback(p);if(type==='Repair'||type==='Ownership transfer')confetti();
+    location.hash='#/p/'+enc(p);route();success('Event added',type+': '+note);
   };
   $('#calc').onclick=()=>{
     const r=+$('#rq').value,n=+$('#np').value;
@@ -450,7 +513,7 @@ function passport(shared){
   $('#adv').onclick=()=>{
     const r=advise(p,$('#cond').value);
     ['p1','p2','p3'].forEach(id=>$('#'+id).classList.remove('on'));
-    $({Repair:'#p1',Reuse:'#p2',Recover:'#p3'}[r.path]).classList.add('on');
+    $({Repair:'#p1',Reuse:'#p2',Recover:'#p3'}[r.path]).classList.add('on');toast('Recommendation ready: '+r.path,'ok');
     $('#res').innerHTML=`<div class="rec"><h3>Recommended: ${r.path}</h3><div>${r.why.map(esc).join(' ')}</div>
       <ul>${r.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       ${r.warn.map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join('')}${r.missing.map(w=>`<div class="warn">ℹ ${esc(w)}</div>`).join('')}</div>`;
@@ -458,11 +521,93 @@ function passport(shared){
   post();
 }
 
-function cloudPush(p){try{window.cloud&&window.cloud.push(p)}catch(e){}}
+const pending=new Set();let seeded=false;let pendingPhoto=null;
+function cloudPush(p){pending.add(p.id);try{return window.cloud?window.cloud.push(p):Promise.resolve(null)}catch(e){return Promise.resolve(false)}}
+function syncFeedback(p){cloudPush(p).then(ok=>{if(ok===false)toast('Cloud save failed. Saved on this device only','err')})}
+let onlyImp=false;
+function setImportant(p,val){
+  p.important=val;
+  const i=products.findIndex(x=>x.id===p.id);if(i>=0)products[i]=p;else products.push(p);
+  save(products);syncFeedback(p);
+  toast(val?'Marked "'+p.name+'" as important':'Removed "'+p.name+'" from important',val?'star':'ok');
+}
+function rerenderKeep(){
+  const g=s=>{const e=$(s);return e?e.value:null};
+  const v={n:g('#n'),c:g('#c'),m:g('#m'),d:g('#d'),mats:[...document.querySelectorAll('#mats .on')].map(x=>x.dataset.m),imp:!!($('#imp')&&$('#imp').classList.contains('on'))};
+  route(true);
+  if(v.n===null)return;
+  $('#n').value=v.n;$('#c').value=v.c;$('#m').value=v.m;if(v.d)$('#d').value=v.d;
+  document.querySelectorAll('#mats .chip').forEach(x=>x.classList.toggle('on',v.mats.includes(x.dataset.m)));
+  if($('#imp'))$('#imp').classList.toggle('on',v.imp);
+}
+function safeRerender(){
+  const busy=['#n','#en','#rq','#np'].some(s=>{const e=$(s);return e&&e.value})||pendingPhoto;
+  const typing=document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName);
+  if(!busy&&!typing&&!document.querySelector('#scanbox video')&&!document.querySelector('#res .rec'))route(true);
+}
+window.__authChange=()=>safeRerender();
+/* photo capture */
+function readPhoto(f,cb){
+  const im=new Image();
+  im.onload=()=>{const sc=Math.min(1,380/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    cb(c.toDataURL('image/jpeg',.65))};
+  im.src=URL.createObjectURL(f);
+}
+function bindPhoto(){
+  const set=f=>{if(!f)return;readPhoto(f,d=>{pendingPhoto=d;$('#phPrev').innerHTML=`<img class="phimg" src="${d}" alt="">`;toast('Photo added','ok')})};
+  $('#phCam').onclick=()=>$('#phA').click();$('#phGal').onclick=()=>$('#phB').click();
+  $('#phA').onchange=e=>set(e.target.files[0]);$('#phB').onchange=e=>set(e.target.files[0]);
+}
+/* login + removal */
+function friendlyAuthErr(e){
+  const c=(e&&e.code)||'';
+  if(/invalid-credential|wrong-password|user-not-found/.test(c))return 'Wrong email or password';
+  if(c.includes('email-already-in-use'))return 'Account exists. Use Log in';
+  if(c.includes('weak-password'))return 'Password needs 6+ characters';
+  if(c.includes('invalid-email'))return 'Enter a valid email';
+  if(c.includes('operation-not-allowed'))return 'Enable Email/Password in Firebase Authentication';
+  return 'Sign-in failed. Check connection and try again';
+}
+function accountCard(){
+  if(!window.auth)return `<div class="card reveal"><h2>Account</h2><p class="desc">Sign-in (used to remove products) becomes available once cloud sync is connected.</p></div>`;
+  const u=window.auth.user();
+  if(u)return `<div class="card reveal"><h2>Account</h2><p class="desc">Signed in as <b>${esc(u.email)}</b>. You can remove products you registered from their passport page.</p><button class="ghost" id="logout" style="margin-top:0">Log out</button></div>`;
+  return `<div class="card reveal"><h2>Account</h2><p class="desc">Sign in to remove products you registered. Browsing and registering need no account.</p>
+    <label>Email</label><input id="le" type="email" autocomplete="email" placeholder="you@example.com">
+    <label>Password (6+ characters)</label><input id="lp" type="password" autocomplete="current-password">
+    <div class="row"><button id="login">Log in</button><button class="ghost" id="signup">Create account</button></div></div>`;
+}
+function bindAccount(){
+  const lo=$('#logout');if(lo)lo.onclick=async()=>{await window.auth.logout();toast('Logged out','ok')};
+  const go=async fn=>{
+    const e=$('#le').value.trim(),p=$('#lp').value;
+    if(!e||p.length<6){toast('Enter email and a 6+ character password','err');return}
+    try{await fn(e,p);success('Signed in','You can now remove products you registered.')}catch(err){toast(friendlyAuthErr(err),'err')}
+  };
+  if($('#login'))$('#login').onclick=()=>go(window.auth.login);
+  if($('#signup'))$('#signup').onclick=()=>go(window.auth.signup);
+}
+function manageCard(p){
+  if(!window.auth)return '';
+  const u=window.auth.user();
+  if(!u)return `<div class="card reveal"><h2>Manage</h2><p class="desc">Sign in from the dashboard to remove products you registered.</p></div>`;
+  const can=!p.ownerUid||p.ownerUid===u.uid;
+  return `<div class="card reveal"><h2>Manage</h2><p class="desc">${can?'You can remove this product permanently. This cannot be undone.':'Only the account that registered this product can remove it.'}</p>${can?'<button class="danger" id="rm">🗑 Remove product</button>':''}</div>`;
+}
+async function removeProduct(p){
+  if(!confirm('Remove "'+p.name+'" permanently?'))return;
+  try{
+    await window.cloud.remove(p.id);
+    products=products.filter(x=>x.id!==p.id);save(products);pending.delete(p.id);
+    success('Product removed','"'+p.name+'" was deleted from the registry.');location.hash='#/';
+  }catch(e){toast('Not allowed: only the owner can remove this','err')}
+}
 window.__cloudUpdate=function(list){
-  if(!list.length){products.forEach(cloudPush);return}
+  if(!list.length&&!seeded){seeded=true;products.forEach(cloudPush);return}
+  seeded=true;
   const map={};list.forEach(p=>map[p.id]=p);
-  products.forEach(l=>{const c=map[l.id];if(!c||(l.events||[]).length>(c.events||[]).length){map[l.id]=l;cloudPush(l)}});
+  products.forEach(l=>{if(pending.has(l.id)){const c=map[l.id];if(c&&(c.events||[]).length>=(l.events||[]).length)pending.delete(l.id);else map[l.id]=l}});
   products=Object.values(map);
   try{localStorage.setItem(KEY,JSON.stringify(products))}catch(e){}
   const busy=['#n','#en','#rq','#np'].some(s=>{const e=$(s);return e&&e.value});
